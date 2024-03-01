@@ -10,6 +10,7 @@ import java.util.Scanner;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
     public static final String RESET = "\u001B[0m";
@@ -52,19 +53,23 @@ public class Main {
      * @see HorizontalAlign
      * */
     private static void displayMenu() {
+        String padding = " " .repeat(5);
         // Display menu options
         Table table = new Table(1, BorderStyle.UNICODE_DOUBLE_BOX_WIDE, ShownBorders.SURROUND_HEADER_AND_COLUMNS);
         table.setColumnWidth(0, 50, 80);
         table.addCell(PURPLE + "STAFF MANAGEMENT SYSTEM", new CellStyle(HorizontalAlign.center));
-        table.addCell("1. Insert Employee", new CellStyle(HorizontalAlign.left));
-        table.addCell("2. Update Employee", new CellStyle(HorizontalAlign.left));
-        table.addCell("3. Display Employee", new CellStyle(HorizontalAlign.left));
-        table.addCell("4. Remove Employee", new CellStyle(HorizontalAlign.left));
-        table.addCell("5. Exit", new CellStyle(HorizontalAlign.left));
+        table.addCell(padding+"1. Insert Employee", new CellStyle(HorizontalAlign.left));
+        table.addCell(padding+"2. Update Employee", new CellStyle(HorizontalAlign.left));
+        table.addCell(padding+"3. Display Employee", new CellStyle(HorizontalAlign.left));
+        table.addCell(padding+"4. Remove Employee", new CellStyle(HorizontalAlign.left));
+        table.addCell(padding+"5. Exit", new CellStyle(HorizontalAlign.left));
         System.out.println(table.render());
         System.out.println("-----------------------------------------");
         System.out.print("Choose option (1-5): ");
     }
+
+////////////////////////////////////////////////////////////////
+
     /**
      * readOption method to read user input option or validation
      * @see Pattern
@@ -74,6 +79,64 @@ public class Main {
         String input = scanner.nextLine();
         return Pattern.matches("^[1-9]$", input) ? Integer.parseInt(input) : -1;
     }
+    /**
+     * validatePositiveDoubleInput method to validate positive double input
+     * use in insertEmployee method
+     * */
+    private static double validatePositiveDoubleInput(Scanner scanner, String prompt, String errorMessage) {
+        double value;
+        do {
+            System.out.print(prompt);
+            while (!scanner.hasNextDouble()) {
+                System.out.println(RED + "Invalid input. Please enter a number." + RESET);
+                System.out.print("Enter again: ");
+                scanner.next();
+            }
+            value = scanner.nextDouble();
+            if (value <= 0) {
+                System.out.println(RED + errorMessage + RESET);
+            }
+        } while (value <= 0);
+        return value;
+    }
+    /**
+     * validateNonNegativeIntInput the same validatePositiveDoubleInput
+     * */
+    private static int validateNonNegativeIntInput(Scanner scanner, String prompt, String errorMessage) {
+        int value;
+        do {
+            System.out.print(prompt);
+            while (!scanner.hasNextInt()) {
+                System.out.println(RED + "Invalid input. Please enter a number." + RESET);
+                System.out.print("Enter again: ");
+                scanner.next();
+            }
+            value = scanner.nextInt();
+            if (value < 0) {
+                System.out.println(RED + errorMessage + RESET);
+            }
+        } while (value < 0);
+        return value;
+    }
+    static String validateName(Scanner scanner, String prompt) {
+        String name;
+        do {
+            System.out.print(prompt);
+            name = scanner.nextLine();
+            if (!isValidName(name)) {
+                System.out.println(RED + "Name should contain only alphabetic characters and spaces. Please try again." + RESET);
+            }
+        } while (!isValidName(name));
+        return name;
+    }
+
+    static boolean isValidName(String name) {
+        String regex = "^[a-zA-Z\\s]+$"; // Updated regex to include spaces
+        return name.matches(regex);
+    }
+
+    //////////////////////////  end Validate     ////////////////////////////////////
+
     /**
      * initializeStaffMembers method to initialize staff members
      * @param staffMembers
@@ -126,37 +189,34 @@ public class Main {
             switch (type) {
                 case 1: {
                     System.out.println("============== Insert Volunteer Employee ==============");
-                    System.out.print("Enter name: ");
-                    String name = scanner.nextLine();
-                    System.out.print("Enter address: ");
+                    String name = validateName(scanner, "Enter name: ");
+                    System.out.print("Enter Address: ");
                     String address = scanner.nextLine();
-                    double salary = validatePositiveDoubleInput(scanner, "Enter salary: ", "Salary must be a positive number.");
+                    double salary = validatePositiveDoubleInput(scanner, "Enter salary: ", RED+"Salary must be a positive number."+RESET);
                     staffMembers.add(new Volunteer(name, address, salary));
-                    System.out.println(BLUE + "Insert Volunteer successfully!" + RESET);
+                    System.out.println("Insert Volunteer successfully!");
                     break;
                 }
                 case 2: {
                     System.out.println("============== Insert Salaries Employee ==============");
-                    System.out.print("Enter name: ");
-                    String name = scanner.next();
-                    System.out.print("Enter address: ");
-                    String address = scanner.next();
-                    double salary = validatePositiveDoubleInput(scanner, "Enter salary: ", "Salary must be a positive number.");
-                    double bonus = validatePositiveDoubleInput(scanner, "Enter bonus: ", "Bonus must be a positive number.");
+                    String name = validateName(scanner, "Enter name: ");
+                    System.out.print("Enter Address: ");
+                    String address = scanner.nextLine();
+                    double salary = validatePositiveDoubleInput(scanner, "Enter salary: ", RED+"Salary must be a positive number."+RESET);
+                    double bonus = validatePositiveDoubleInput(scanner, "Enter bonus: ", RED+"Bonus must be a positive number."+RESET);
                     staffMembers.add(new SalariesEmployee(name, address, salary, bonus));
-                    System.out.println(BLUE + "Insert Salaries Employee successfully!" + RESET);
+                    System.out.println("Insert Salaries Employee successfully!");
                     break;
                 }
                 case 3: {
                     System.out.println("============== Insert Hourly Employee ==============");
-                    System.out.print("Enter name: ");
-                    String name = scanner.nextLine();
+                    String name = validateName(scanner, "Enter name: ");
                     System.out.print("Enter address: ");
                     String address = scanner.nextLine();
-                    int hourWorked = validateNonNegativeIntInput(scanner, "Enter hour worked: ", "Hour worked cannot be negative.");
-                    double rate = validatePositiveDoubleInput(scanner, "Enter rate: ", "Rate must be a positive number.");
+                    int hourWorked = validateNonNegativeIntInput(scanner, "Enter hour worked: ", RED+"Hour worked cannot be negative."+RESET);
+                    double rate = validatePositiveDoubleInput(scanner, "Enter rate: ", RED+"Rate must be a positive number."+RESET);
                     staffMembers.add(new HourlySalaryEmployee(name, address, hourWorked, rate));
-                    System.out.println(BLUE + "Insert Hourly successfully!" + RESET);
+                    System.out.println("Insert Hourly successfully!");
                     break;
                 }
                 case 4: {
@@ -169,53 +229,17 @@ public class Main {
             }
         } while (type != 4);
     }
-    /**
-     * validatePositiveDoubleInput method to validate positive double input
-     * use in insertEmployee method
-     * */
-    private static double validatePositiveDoubleInput(Scanner scanner, String prompt, String errorMessage) {
-        double value;
-        do {
-            System.out.print(prompt);
-            while (!scanner.hasNextDouble()) {
-                System.out.println(RED + "Invalid input. Please enter a number." + RESET);
-                System.out.print("Enter again: ");
-                scanner.next();
-            }
-            value = scanner.nextDouble();
-            if (value <= 0) {
-                System.out.println(RED + errorMessage + RESET);
-            }
-        } while (value <= 0);
-        return value;
-    }
-    /**
-     * validateNonNegativeIntInput the same validatePositiveDoubleInput
-     * */
-    private static int validateNonNegativeIntInput(Scanner scanner, String prompt, String errorMessage) {
-        int value;
-        do {
-            System.out.print(prompt);
-            while (!scanner.hasNextInt()) {
-                System.out.println(RED + "Invalid input. Please enter a number." + RESET);
-                System.out.print("Enter again: ");
-                scanner.next();
-            }
-            value = scanner.nextInt();
-            if (value < 0) {
-                System.out.println(RED + errorMessage + RESET);
-            }
-        } while (value < 0);
-        return value;
-    }
 
     static void deleteEmployee(List<StaffMember> staffMembers) {
         Scanner scanner = new Scanner(System.in);
         int deleteId;
         do {
             System.out.println("============== * Remove Employee * ==============");
-            System.out.print("Enter ID Staff to remove: ");
+            System.out.print("Enter ID Staff to remove (0 to exit): ");
             deleteId = scanner.nextInt();
+            if (deleteId == 0) {
+                break; // Exit the loop if the user enters 0
+            }
             if (deleteId < 1 || deleteId > staffMembers.size()) {
                 System.out.println(RED + "Invalid ID, please try again!...." + RESET);
                 continue;
@@ -226,8 +250,9 @@ public class Main {
             }
             staffMembers.remove(deleteId - 1);
             System.out.println(BLUE + "Remove employee successfully!" + RESET);
-        } while (deleteId != staffMembers.size() + 1);
+        } while (true);
     }
+
     static void updateEmployee(List<StaffMember> staffMembers) {
         Scanner scanner = new Scanner(System.in);
         int updateId;
@@ -288,48 +313,96 @@ public class Main {
             scanner.nextLine();
             switch (option) {
                 case 1: {
-                    System.out.print("Enter new name: ");
-                    String name = scanner.nextLine();
+                    String name = validateName(scanner, "Enter new name: ");
                     staffMembers.get(updateId - 1).setName(name);
+                    Table t = new Table(6, BorderStyle.UNICODE_DOUBLE_BOX_WIDE, ShownBorders.ALL);
+                    Tabled(t);
+                    Payment(staffMembers, updateId, index, t);
+                    t.addCell("$" + ((Volunteer) staffMembers.get(updateId - 1)).getSalary(), new CellStyle(HorizontalAlign.center));
+                    t.addCell("$" + staffMembers.get(updateId - 1).pay(), new CellStyle(HorizontalAlign.center));
+
+                    System.out.println(t.render());
                     System.out.println("=> Update name successfully!");
-                    break;
+                    return;
                 }
                 case 2: {
                     System.out.print("=> Change address to: ");
                     String address = scanner.nextLine();
                     staffMembers.get(updateId - 1).setAddress(address);
+                    Table t = new Table(6, BorderStyle.UNICODE_DOUBLE_BOX_WIDE, ShownBorders.ALL);
+                    Tabled(t);
+                    Payment(staffMembers, updateId, index, t);
+                    t.addCell("$" + ((Volunteer) staffMembers.get(updateId - 1)).getSalary(), new CellStyle(HorizontalAlign.center));
+                    t.addCell("$" + staffMembers.get(updateId - 1).pay(), new CellStyle(HorizontalAlign.center));
+
+                    System.out.println(t.render());
                     System.out.println(BLUE+"Update address successfully!"+RESET);
-                    break;
+                    return;
                 }
                 case 3: {
                     if (staffMembers.get(updateId - 1) instanceof SalariesEmployee salariesEmployee) {
-                        System.out.print("=> Enter new salary: ");
-                        double salary = scanner.nextDouble();
+                        double salary = validatePositiveDoubleInput(scanner, "Enter salary: ", RED+"Salary must be a positive number."+RESET);
+
                         salariesEmployee.setSalary(salary);
+                        Table t = new Table(7, BorderStyle.UNICODE_DOUBLE_BOX_WIDE, ShownBorders.ALL);
+                        Tabled(t);
+                        t.addCell(GREEN + "Bonus", new CellStyle(HorizontalAlign.center));
+                        Payment(staffMembers, updateId, index, t);
+                        t.addCell("$" + ((SalariesEmployee) staffMembers.get(updateId - 1)).getSalary(), new CellStyle(HorizontalAlign.center));
+                        t.addCell("$" + ((SalariesEmployee) staffMembers.get(updateId - 1)).getBonus(), new CellStyle(HorizontalAlign.center));
+                        t.addCell("$" + staffMembers.get(updateId - 1).pay(), new CellStyle(HorizontalAlign.center));
+
+                        System.out.println(t.render());
                         System.out.println(BLUE+ "Update salary successfully!"+RESET);
+                        return;
                     } else if (staffMembers.get(updateId - 1) instanceof HourlySalaryEmployee hourlyEmployee) {
-                        System.out.print("=> Enter new hour worked: ");
-                        int hourWorked = scanner.nextInt();
+                        int hourWorked = validateNonNegativeIntInput(scanner, "Enter hour worked: ", RED+"Hour worked cannot be negative."+RESET);
                         hourlyEmployee.setHourWorked(hourWorked);
+                        updateRateTable(staffMembers, updateId, index, hourlyEmployee);
                         System.out.println(BLUE+"Update hour worked successfully!"+RESET);
+                        break;
                     } else {
-                        System.out.print("=> Enter new salary: ");
-                        double salary = scanner.nextDouble();
-                        ((Volunteer) staffMembers.get(updateId - 1)).setSalary(salary);
-                        System.out.println(BLUE+"Update new salary successfully!"+RESET);
+                        double salary = validatePositiveDoubleInput(scanner, "Enter rate: ", RED+"Rate must be a positive number."+RESET);
+                        ((SalariesEmployee) staffMembers.get(updateId - 1)).setSalary(salary);
+                        Table t = new Table(6, BorderStyle.UNICODE_DOUBLE_BOX_WIDE, ShownBorders.ALL);
+                        Tabled(t);
+                        Payment(staffMembers, updateId, index, t);
+                        t.addCell("$" + ((Volunteer) staffMembers.get(updateId - 1)).getSalary(), new CellStyle(HorizontalAlign.center));
+                        t.addCell("$" + staffMembers.get(updateId - 1).pay(), new CellStyle(HorizontalAlign.center));
+
+                        System.out.println(t.render());
+                        System.out.println(BLUE+"Update new rate successfully!"+RESET);
                     }
-                    break;
+                    return;
                 }
                 case 4: {
                     if (staffMembers.get(updateId - 1) instanceof SalariesEmployee salariesEmployee) {
-                        System.out.print("=> Enter new bonus: ");
-                        double bonus = scanner.nextDouble();
+                        double bonus = validatePositiveDoubleInput(scanner, "Enter bonus: ", RED+"Bonus must be a positive number."+RESET);
+                        Table t = new Table(7, BorderStyle.UNICODE_DOUBLE_BOX_WIDE, ShownBorders.ALL);
+                        t.setColumnWidth(0, 20, 50);
+                        t.addCell(GREEN + "Type", new CellStyle(HorizontalAlign.center));
+                        t.addCell(GREEN + "ID", new CellStyle(HorizontalAlign.center));
+                        t.addCell(GREEN + "Name", new CellStyle(HorizontalAlign.center));
+                        t.addCell(GREEN + "Address", new CellStyle(HorizontalAlign.center));
+                        t.addCell(GREEN + "Salary", new CellStyle(HorizontalAlign.center));
+                        t.addCell(GREEN + "Bonus", new CellStyle(HorizontalAlign.center));
+                        t.addCell(GREEN + "Pay", new CellStyle(HorizontalAlign.center));
+
+                        t.addCell(staffMembers.get(updateId - 1).getClass().getSimpleName());
+                        t.addCell(staffMembers.get(updateId - 1).getName(), new CellStyle(HorizontalAlign.center));
+                        t.addCell(String.valueOf(++index), new CellStyle(HorizontalAlign.center));
+                        t.addCell(staffMembers.get(updateId - 1).getAddress(), new CellStyle(HorizontalAlign.center));
+                        t.addCell(String.valueOf(salariesEmployee.getSalary()), new CellStyle(HorizontalAlign.center));
+                        t.addCell(String.valueOf(salariesEmployee.getBonus()), new CellStyle(HorizontalAlign.center));
+                        t.addCell("$" + salariesEmployee.pay(), new CellStyle(HorizontalAlign.center));
+                        System.out.println(t.render());
                         salariesEmployee.setBonus(bonus);
                         System.out.println("Update bonus successfully!");
+                        return;
                     }  else if (staffMembers.get(updateId - 1) instanceof HourlySalaryEmployee hourlyEmployee) {
-                        System.out.print("=> Enter new rate: ");
-                        double rate = scanner.nextDouble();
+                        double rate = validatePositiveDoubleInput(scanner, "Enter rate: ", RED+"Rate must be a positive number."+RESET);
                         hourlyEmployee.setRate(rate);
+                        updateRateTable(staffMembers, updateId, index, hourlyEmployee);
                         System.out.println("Updated Rate successfully!");
                     }
                     break;
@@ -343,6 +416,27 @@ public class Main {
                 }
             }
         } while (updateId != 3);
+    }
+
+    private static void updateRateTable(List<StaffMember> staffMembers, int updateId, int index, HourlySalaryEmployee hourlyEmployee) {
+        Table t = new Table(7, BorderStyle.UNICODE_DOUBLE_BOX_WIDE, ShownBorders.ALL);
+        t.setColumnWidth(0, 20, 50);
+        t.addCell(GREEN + "Type", new CellStyle(HorizontalAlign.center));
+        t.addCell(GREEN + "ID", new CellStyle(HorizontalAlign.center));
+        t.addCell(GREEN + "Name", new CellStyle(HorizontalAlign.center));
+        t.addCell(GREEN + "Address", new CellStyle(HorizontalAlign.center));
+        t.addCell(GREEN + "Hour", new CellStyle(HorizontalAlign.center));
+        t.addCell(GREEN + "Rate", new CellStyle(HorizontalAlign.center));
+        t.addCell(GREEN + "Pay", new CellStyle(HorizontalAlign.center));
+
+        t.addCell(staffMembers.get(updateId - 1).getClass().getSimpleName());
+        t.addCell(staffMembers.get(updateId - 1).getName(), new CellStyle(HorizontalAlign.center));
+        t.addCell(String.valueOf(++index), new CellStyle(HorizontalAlign.center));
+        t.addCell(staffMembers.get(updateId - 1).getAddress(), new CellStyle(HorizontalAlign.center));
+        t.addCell(String.valueOf(hourlyEmployee.getHourWorked()), new CellStyle(HorizontalAlign.center));
+        t.addCell(String.valueOf(hourlyEmployee.getRate()), new CellStyle(HorizontalAlign.center));
+        t.addCell("$" + hourlyEmployee.pay(), new CellStyle(HorizontalAlign.center));
+        System.out.println(t.render());
     }
 
     private static void Payment(List<StaffMember> staffMembers, int updateId, int index, Table t) {
@@ -441,14 +535,21 @@ public class Main {
         int currentPage = 1; // page 1
         int option;
         do {
+
             // Filter staff members based on pagination
             List<StaffMember> currentPageMembers = IntStream.range((currentPage - 1) * pageSize, Math.min(currentPage * pageSize, staffMembers.size()))
                     .mapToObj(staffMembers::get)
                     .collect(Collectors.toList());
 
-
             // Display current page content
             displayTable(currentPageMembers);
+
+            // Introduce animation delay
+            try {
+                TimeUnit.SECONDS.sleep(3); // Wait for 3 seconds
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             // Display pagination options
             System.out.println("--------------------------------------");
