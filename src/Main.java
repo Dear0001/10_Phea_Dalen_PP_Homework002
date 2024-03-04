@@ -554,8 +554,12 @@ public class Main {
             // Display pagination options
             System.out.println("--------------------------------------");
             System.out.println("1. First  \t\t2. Next  \t\t3. Previous  \t\t4. Last  \t\t5. Back");
-            option = scanner.nextInt();
-
+            option = readOption(scanner);
+             if (option == -1) {
+                System.out.println(RED + "Invalid option, input must be a digit and started from (1-5)." + RESET);
+                continue;
+            }
+            
             switch (option) {
                 case 1 -> currentPage = 1;
                 case 2 -> currentPage = Math.min(currentPage + 1, totalPages);
